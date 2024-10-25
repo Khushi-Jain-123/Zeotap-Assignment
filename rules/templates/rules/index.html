@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rule Engine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #f8fafc;
+            --accent-gray: #f1f5f9;
+            --text-color: #1e293b;
+        }
+
+        body {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: white;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .select2-container--default .select2-selection--multiple {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            background-color: white;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: #64748b;
+            border: none;
+        }
+
+        .btn-success {
+            background-color: #059669;
+            border: none;
+        }
+
+        .result-container {
+            background-color: var(--accent-gray);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        pre {
+            background-color: white;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 0;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-container--default .select2-selection--multiple {
+            min-height: 100px;
+        }
+
+        hr {
+            margin: 2rem 0;
+            border-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <span class="navbar-brand">Rule Engine Dashboard</span>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="card">
+            <h2 class="card-title">Rule Selection</h2>
+            <div class="form-group">
+                <label class="form-label" for="ruleSelect">Select Existing Rules</label>
+                <select class="form-control" id="ruleSelect" multiple>
+                    {% for rule in rules %}
+                        <option value="{{ rule.id }}">{{ rule.rule_string }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-secondary mt-3" onclick="combineRules()">Combine Selected Rules</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Create New Rule</h2>
+            <form id="ruleForm">
+                <div class="form-group">
+                    <label class="form-label" for="ruleString">Enter/Modify Rule String</label>
+                    <textarea class="form-control" id="ruleString" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Generate AST</button>
+            </form>
+            
+            <div class="result-container">
+                <h3 class="result-title">Generated AST</h3>
+                <pre id="astOutput"></pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Evaluate Rule</h2>
+            <form id="evaluateForm">
+                <div class="form-group">
+                    <label class="form-label" for="evaluateData">Enter JSON Data</label>
+                    <textarea class="form-control" id="evaluateData" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Evaluate Rule</button>
+            </form>
+            
+            <div class="result-container">
+                <h3 class="result-title">Evaluation Result</h3>
+                <pre id="evaluationOutput"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // Your existing JavaScript code remains the same
+        $(document).ready(function() {
+            $('#ruleSelect').select2({
+                placeholder: "Select rules to combine",
+                allowClear: true
+            });
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        async function combineRules() {
+            const selectedRules = $('#ruleSelect').val();
+            if (!selectedRules || selectedRules.length === 0) {
+                alert('Please select at least one rule');
+                return;
+            }
+
+            try {
+                const response = await fetch('combine_rules/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({ rule_ids: selectedRules }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                document.getElementById('ruleString').value = data.combined_string;
+            } catch (error) {
+                alert(`Error combining rules: ${error.message}`);
+            }
+        }
+
+        document.getElementById('ruleForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const ruleString = document.getElementById('ruleString').value;
+
+            try {
+                const response = await fetch('create_rule/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({ rule_string: ruleString }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                document.getElementById('astOutput').innerText = JSON.stringify(data.ast, null, 2);
+                
+                const select = document.getElementById('ruleSelect');
+                select.innerHTML = data.rules.map(rule => 
+                    `<option value="${rule.id}">${rule.rule_string}</option>`
+                ).join('');
+                
+                $('#ruleSelect').select2({
+                    placeholder: "Select rules to combine",
+                    allowClear: true
+                });
+            } catch (error) {
+                document.getElementById('astOutput').innerText = `Error: ${error.message}`;
+            }
+        };
+
+        document.getElementById('evaluateForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const evaluateData = document.getElementById('evaluateData').value;
+            const astOutput = document.getElementById('astOutput').innerText;
+
+            if (!astOutput) {
+                document.getElementById('evaluationOutput').innerText = 'Please generate an AST first.';
+                return;
+            }
+
+            const astData = JSON.parse(astOutput);
+
+            try {
+                const response = await fetch('evaluate_rule/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({
+                        ast: astData,
+                        data: JSON.parse(evaluateData),
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const resultData = await response.json();
+                document.getElementById('evaluationOutput').innerText = resultData.result;
+            } catch (error) {
+                document.getElementById('evaluationOutput').innerText = `Error: ${error.message}`;
+            }
+        };
+    </script>
+</body>
+</html>
