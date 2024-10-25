@@ -15,28 +15,23 @@ and all the installs from requirements.txt file
 
 
 **SET UP THE DATABASE**
-Run following commands - python manage.py makemigrations  
-                       - python manage.py migrate
+- python manage.py makemigrations  
+- python manage.py migrate
 
 
 **CREATE SUPERUSER**
-Run following command - python manage.py createsuperuser
-Or use existing user id - Admin, pswd - Admin
+- python manage.py createsuperuser
+ (Or use existing user id - Admin, pswd - Admin)
 
 
 **RUN THE DEVELOPMENT SERVER**
-Run following command - python manage.py runserver
+- python manage.py runserver
 
 **RULE SYNTAX**
 Rules can be written using a simple syntax. Here are some examples:
 
-   # Simple comparison
    amount > 1000
-  
-   # Logical combinations
    (category == "electronics") AND (price < 500)
-  
-   # Complex nested rules
    (status == "active") AND (age > 18 OR (parent_consent == true))
 
   
