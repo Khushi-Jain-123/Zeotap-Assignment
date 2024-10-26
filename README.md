@@ -5,6 +5,9 @@ Frontend: Bootstrap, Select2
 API Documentation: drf-yasg
 
 
+**DEBUG TOOL**
+Install VScode and do whole setup. Open that folder in vscode which contains rule, rule-engine folders and some files.
+
 **PREREQUISITES**
 Before you begin, ensure you have the following installed:
 Python 3.8 or higher
